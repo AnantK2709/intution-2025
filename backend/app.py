@@ -205,24 +205,12 @@ async def upload_document(background_tasks: BackgroundTasks, file: UploadFile = 
     
     # Get file type
     file_extension = file.filename.split('.')[-1].lower()
-    
-    # Determine target directory
-    if file_extension == 'pdf':
-        target_dir = 'pdf'
-    elif file_extension == 'txt':
-        target_dir = 'text'
-    elif file_extension in ['doc', 'docx']:
-        target_dir = 'word'
-    elif file_extension == 'csv':
-        target_dir = 'csv'
-    else:
-        raise HTTPException(status_code=400, detail=f"Unsupported file type: {file_extension}")
-    
+
     # Create directory if it doesn't exist
-    os.makedirs(os.path.join(rag.docs_dir, target_dir), exist_ok=True)
+    os.makedirs(os.path.join(rag.docs_dir), exist_ok=True)
     
     # Save the file
-    file_path = os.path.join(rag.docs_dir, target_dir, file.filename)
+    file_path = os.path.join(rag.docs_dir, file.filename)
     
     try:
         # Save uploaded file
