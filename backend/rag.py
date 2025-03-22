@@ -4,10 +4,8 @@ import numpy as np
 
 from langchain_community.document_loaders import(
     PyPDFLoader, 
-    DirectoryLoader, 
-    TextLoader, 
-    CSVLoader,
-    UnstructuredWordDocumentLoader
+    TextLoader
+   
 )
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai.embeddings import OpenAIEmbeddings
