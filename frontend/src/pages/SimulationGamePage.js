@@ -375,6 +375,7 @@ const SimulationGamePage = () => {
   const [currentScenario, setCurrentScenario] = useState(0);
   const [decisions, setDecisions] = useState({});
   const [showOutcome, setShowOutcome] = useState(false);
+  const [extractedScenarios, setExtractedScenarios] = useState([]);
   const [completed, setCompleted] = useState(false);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState({
@@ -382,6 +383,79 @@ const SimulationGamePage = () => {
     submit: false
   });
   const [startTime] = useState(Date.now());
+  
+  // Helper function to extract scenarios from potentially nested structures
+  const extractScenarios = (gameContent) => {
+    if (!gameContent) return [];
+    
+    console.log("Analyzing simulation game content:", gameContent);
+    
+    // Case 1: Direct array of scenarios
+    if (Array.isArray(gameContent.scenarios)) {
+      console.log("Found direct array of scenarios");
+      return gameContent.scenarios;
+    }
+    
+    // Case 2: Scenarios nested in an object
+    if (typeof gameContent.scenarios === 'object' && gameContent.scenarios !== null) {
+      // Check if it contains an array
+      const nestedKeys = Object.keys(gameContent.scenarios);
+      console.log("Scenarios object keys:", nestedKeys);
+      
+      if (nestedKeys.includes('scenarios') && Array.isArray(gameContent.scenarios.scenarios)) {
+        console.log("Found nested scenarios array");
+        return gameContent.scenarios.scenarios;
+      }
+      
+      // Check if the object itself is a scenarios array with numeric keys
+      if (nestedKeys.some(key => !isNaN(parseInt(key)))) {
+        console.log("Found scenarios object with numeric keys");
+        return Object.values(gameContent.scenarios);
+      }
+    }
+    
+    // Case 3: Check if the entire content object itself is the scenarios array
+    if (gameContent && typeof gameContent === 'object') {
+      const keys = Object.keys(gameContent);
+      if (keys.includes('0') && keys.some(key => !isNaN(parseInt(key)))) {
+        console.log("Content itself appears to be the scenarios array");
+        return Object.values(gameContent);
+      }
+    }
+    
+    // Case 4: If we have an object with numeric keys that contains scenario objects
+    if (typeof gameContent === 'object' && gameContent !== null) {
+      const keys = Object.keys(gameContent);
+      if (keys.some(key => !isNaN(parseInt(key))) && 
+          typeof gameContent[keys[0]] === 'object' &&
+          gameContent[keys[0]] !== null &&
+          ('title' in gameContent[keys[0]] || 'description' in gameContent[keys[0]])) {
+        console.log("Found scenarios as direct numeric properties");
+        return Object.values(gameContent);
+      }
+    }
+    
+    console.log("No valid scenarios structure found");
+    return [];
+  };
+
+  // Debug logging to check game data structure
+  useEffect(() => {
+    if (game) {
+      console.log("Complete simulation game object:", game);
+      
+      if (game && game.content) {
+        console.log("Simulation game content structure:", game.content);
+        const scenarios = extractScenarios(game.content);
+        if (scenarios && scenarios.length > 0) {
+          console.log(`Successfully extracted ${scenarios.length} simulation scenarios:`, scenarios);
+          setExtractedScenarios(scenarios);
+        } else {
+          console.error("Failed to extract valid scenarios from simulation game content");
+        }
+      }
+    }
+  }, [game]);
   
   // Fetch game data if not provided in location state
   useEffect(() => {
@@ -423,8 +497,8 @@ const SimulationGamePage = () => {
   };
   
   const handleNextScenario = () => {
-    if (game && game.content.scenarios) {
-      if (currentScenario < game.content.scenarios.length - 1) {
+    if (extractedScenarios.length > 0) {
+      if (currentScenario < extractedScenarios.length - 1) {
         setCurrentScenario(prev => prev + 1);
         setShowOutcome(false);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -441,16 +515,16 @@ const SimulationGamePage = () => {
   };
   
   const hasDecisionForCurrentScenario = () => {
-    if (!game || !game.content.scenarios) return false;
+    if (!extractedScenarios || extractedScenarios.length === 0) return false;
     
-    const scenarioId = game.content.scenarios[currentScenario].id;
+    const scenarioId = extractedScenarios[currentScenario].id;
     return !!decisions[scenarioId];
   };
   
   const getCurrentOutcome = () => {
-    if (!game || !game.content.scenarios || !hasDecisionForCurrentScenario()) return null;
+    if (!extractedScenarios || extractedScenarios.length === 0 || !hasDecisionForCurrentScenario()) return null;
     
-    const scenario = game.content.scenarios[currentScenario];
+    const scenario = extractedScenarios[currentScenario];
     const decisionId = decisions[scenario.id];
     
     // Find the selected decision
@@ -463,11 +537,11 @@ const SimulationGamePage = () => {
   };
   
   const calculateTotalImpact = () => {
-    if (!game || !game.content.scenarios) return { timeline: 0, adoption: 0, results: 0 };
+    if (!extractedScenarios || extractedScenarios.length === 0) return { timeline: 0, adoption: 0, results: 0 };
     
     const totalImpact = { timeline: 0, adoption: 0, results: 0 };
     
-    game.content.scenarios.forEach(scenario => {
+    extractedScenarios.forEach(scenario => {
       const decisionId = decisions[scenario.id];
       if (!decisionId) return;
       
@@ -492,7 +566,7 @@ const SimulationGamePage = () => {
   };
   
   const calculateScore = () => {
-    if (!game || !game.content.scenarios) return 0;
+    if (!extractedScenarios || extractedScenarios.length === 0) return 0;
     
     // Calculate score based on the total impact
     const totalImpact = calculateTotalImpact();
@@ -588,10 +662,33 @@ const SimulationGamePage = () => {
     );
   }
   
+  // Check if game content is properly formatted
+  if (!game.content || extractedScenarios.length === 0) {
+    return (
+      <PageSection>
+        <div className="bg-shape shape-1"></div>
+        <div className="bg-shape shape-2"></div>
+        <Container>
+          <Card>
+            <h2>Error: Invalid Game Content</h2>
+            <p>This game doesn't contain valid scenarios. Please try another game or contact support.</p>
+            <Button 
+              onClick={() => navigate('/games')}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Back to Games
+            </Button>
+          </Card>
+        </Container>
+      </PageSection>
+    );
+  }
+  
   // Get current scenario data
-  const scenarios = game.content.scenarios;
-  const currentScenarioData = scenarios[currentScenario];
-  const progress = ((currentScenario + 1) / scenarios.length) * 100;
+  const scenarios = extractedScenarios;
+  const currentScenarioData = scenarios[currentScenario] || {};
+  const progress = scenarios.length > 0 ? ((currentScenario + 1) / scenarios.length) * 100 : 0;
   const outcome = showOutcome ? getCurrentOutcome() : null;
   
   return (
