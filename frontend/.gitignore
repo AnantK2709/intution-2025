@@ -12,6 +12,8 @@
 /build
 
 # misc
+backend\.env
+backend\config.py
 .env
 config.py
 .DS_Store
