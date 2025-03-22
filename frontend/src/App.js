@@ -14,6 +14,7 @@ import MCQGamePage from './pages/MCQGamePage';
 import QuizGamePage from './pages/QuizGamePage';
 import ChallengeGamePage from './pages/ChallengeGamePage';
 import SimulationGamePage from './pages/SimulationGamePage';
+import FAQPage from './pages/FAQPage';
 
 // Components
 import Header from './components/Header';
@@ -101,7 +102,7 @@ const AnimatedRoutes = () => {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="*" element={<NotFoundPage />} />
           <Route path="/generate-email" element={<PromptFlowPage />} />
-          
+          <Route path="/faq" element={<FAQPage />} />
           {/* Gamification Routes */}
           <Route path="/games" element={<GamificationPage />} />
           <Route path="/play/mcq/:gameId" element={<MCQGamePage />} />
