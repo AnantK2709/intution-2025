@@ -293,7 +293,7 @@ const LoadingSpinner = styled.div`
   }
 `;
 
-// Main component
+
 const MCQGamePage = () => {
   const { gameId } = useParams();
   const location = useLocation();
@@ -301,6 +301,7 @@ const MCQGamePage = () => {
   const [game, setGame] = useState(location.state?.game || null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
+  const [extractedQuestions, setExtractedQuestions] = useState([]);
   const [completed, setCompleted] = useState(false);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState({
@@ -309,59 +310,78 @@ const MCQGamePage = () => {
   });
   const [startTime] = useState(Date.now());
 
-
-const DEBUG_GAME_DATA = (game) => {
-    if (!game) {
-      console.log("Game object is null or undefined");
-      return;
+  // Helper function to extract questions from potentially nested structures
+  const extractQuestions = (gameContent) => {
+    if (!gameContent) return [];
+    
+    console.log("Analyzing game content:", gameContent);
+    
+    // Case 1: Direct array of questions
+    if (Array.isArray(gameContent.questions)) {
+      console.log("Found direct array of questions");
+      return gameContent.questions;
     }
     
-    console.log("======= GAME STRUCTURE DEBUG =======");
-    console.log("Game ID:", game.game_id);
-    console.log("Game Type:", game.game_type);
-    console.log("Game Title:", game.title);
-    
-    if (!game.content) {
-      console.log("Game content is missing!");
-      return;
-    }
-    
-    console.log("Content structure:", Object.keys(game.content));
-    
-    if (!game.content.questions || !Array.isArray(game.content.questions)) {
-      console.log("Questions array is missing or not an array!");
-      console.log("Raw content:", JSON.stringify(game.content, null, 2));
-      return;
-    }
-    
-    console.log(`Found ${game.content.questions.length} questions:`);
-    
-    game.content.questions.forEach((q, index) => {
-      console.log(`\nQuestion ${index + 1} (ID: ${q.id}):`);
-      console.log("Text:", q.text);
-      console.log("Options present:", !!q.options);
+    // Case 2: Questions nested in an object
+    if (typeof gameContent.questions === 'object' && gameContent.questions !== null) {
+      // Check if it contains an array
+      const nestedKeys = Object.keys(gameContent.questions);
+      console.log("Questions object keys:", nestedKeys);
       
-      if (q.options) {
-        console.log(`Number of options: ${q.options.length}`);
-        q.options.forEach(opt => {
-          console.log(`  - ${opt.id}: ${opt.text}`);
-        });
-        console.log("Correct answer:", q.correct_answer);
+      if (nestedKeys.includes('questions') && Array.isArray(gameContent.questions.questions)) {
+        console.log("Found nested questions array");
+        return gameContent.questions.questions;
       }
-    });
+      
+      // Check if the object itself is a questions array with numeric keys
+      if (nestedKeys.some(key => !isNaN(parseInt(key)))) {
+        console.log("Found questions object with numeric keys");
+        return Object.values(gameContent.questions);
+      }
+    }
     
-    console.log("===================================");
+    // Case 3: Check if the entire content object itself is the questions array
+    if (gameContent && typeof gameContent === 'object') {
+      const keys = Object.keys(gameContent);
+      if (keys.includes('0') && keys.some(key => !isNaN(parseInt(key)))) {
+        console.log("Content itself appears to be the questions array");
+        return Object.values(gameContent);
+      }
+    }
+    
+    // Case 4: If we have an object with numeric keys that contains question objects
+    if (typeof gameContent === 'object' && gameContent !== null) {
+      const keys = Object.keys(gameContent);
+      if (keys.some(key => !isNaN(parseInt(key))) && 
+          typeof gameContent[keys[0]] === 'object' &&
+          gameContent[keys[0]] !== null &&
+          'text' in gameContent[keys[0]]) {
+        console.log("Found questions as direct numeric properties");
+        return Object.values(gameContent);
+      }
+    }
+    
+    console.log("No valid questions structure found");
+    return [];
   };
-  
+
   // Debug logging to check game data structure
   useEffect(() => {
     if (game) {
-        if (game && game.content && game.content.questions) {
-            console.log(`Game has ${game.content.questions.length} questions`);
-          }
-        DEBUG_GAME_DATA(game);
+      console.log("Complete game object:", game);
+      
+      if (game && game.content) {
+        console.log("Game content structure:", game.content);
+        const questions = extractQuestions(game.content);
+        if (questions && questions.length > 0) {
+          console.log(`Successfully extracted ${questions.length} questions:`, questions);
+          setExtractedQuestions(questions);
+        } else {
+          console.error("Failed to extract valid questions from game content");
+        }
       }
-    }, [game]);
+    }
+  }, [game]);
   
   // Fetch game data if not provided in location state
   useEffect(() => {
@@ -377,12 +397,6 @@ const DEBUG_GAME_DATA = (game) => {
           if (foundGame) {
             setGame(foundGame);
             console.log("Found game:", foundGame);
-            // Check if the game content has questions
-            if (foundGame.content && foundGame.content.questions) {
-              console.log(`Game has ${foundGame.content.questions.length} questions`);
-            } else {
-              console.warn("Game content structure is unexpected:", foundGame.content);
-            }
           } else {
             // Navigate back if game not found
             console.error("Game not found with ID:", gameId);
@@ -408,22 +422,10 @@ const DEBUG_GAME_DATA = (game) => {
   };
   
   const handleNextQuestion = () => {
-    console.log(`Trying to move from question ${currentQuestion} to ${currentQuestion + 1}`);
-  console.log(`Total questions: ${game?.content?.questions?.length || 'unknown'}`);
-  
-  if (game && game.content && game.content.questions) {
-    if (currentQuestion < game.content.questions.length - 1) {
-      setCurrentQuestion(prev => {
-        console.log(`Setting current question from ${prev} to ${prev + 1}`);
-        return prev + 1;
-      });
+    if (extractedQuestions.length > 0 && currentQuestion < extractedQuestions.length - 1) {
+      setCurrentQuestion(prev => prev + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      console.log("Already at the last question!");
     }
-  } else {
-    console.error("Cannot navigate: Invalid game structure");
-  }
   };
   
   const handlePrevQuestion = () => {
@@ -434,13 +436,12 @@ const DEBUG_GAME_DATA = (game) => {
   };
   
   const calculateScore = () => {
-    if (!game || !game.content || !game.content.questions) return 0;
+    if (!extractedQuestions || extractedQuestions.length === 0) return 0;
     
-    const questions = game.content.questions;
     let correctCount = 0;
-    let totalQuestions = questions.length;
+    let totalQuestions = extractedQuestions.length;
     
-    questions.forEach(question => {
+    extractedQuestions.forEach(question => {
       if (answers[question.id] === question.correct_answer) {
         correctCount++;
       }
@@ -523,7 +524,7 @@ const DEBUG_GAME_DATA = (game) => {
   }
   
   // Check if game content is properly formatted
-  if (!game.content || !game.content.questions || !Array.isArray(game.content.questions) || game.content.questions.length === 0) {
+  if (!game.content || extractedQuestions.length === 0) {
     return (
       <PageSection>
         <div className="bg-shape shape-1"></div>
@@ -546,10 +547,9 @@ const DEBUG_GAME_DATA = (game) => {
   }
   
   // Get current question data
-  const questions = game.content.questions;
-  const currentQuestionData = questions[currentQuestion];
-  const progress = ((currentQuestion + 1) / questions.length) * 100;
-  
+  const questions = extractedQuestions;
+  const currentQuestionData = questions[currentQuestion] || {};
+  const progress = questions.length > 0 ? ((currentQuestion + 1) / questions.length) * 100 : 0;
   // Render the game UI
   return (
     <PageSection>

@@ -342,6 +342,7 @@ const QuizGamePage = () => {
   const [game, setGame] = useState(location.state?.game || null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
+  const [extractedQuestions, setExtractedQuestions] = useState([]);
   const [completed, setCompleted] = useState(false);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState({
@@ -349,6 +350,79 @@ const QuizGamePage = () => {
     submit: false
   });
   const [startTime] = useState(Date.now());
+  
+  // Helper function to extract questions from potentially nested structures
+  const extractQuestions = (gameContent) => {
+    if (!gameContent) return [];
+    
+    console.log("Analyzing quiz game content:", gameContent);
+    
+    // Case 1: Direct array of questions
+    if (Array.isArray(gameContent.questions)) {
+      console.log("Found direct array of questions");
+      return gameContent.questions;
+    }
+    
+    // Case 2: Questions nested in an object
+    if (typeof gameContent.questions === 'object' && gameContent.questions !== null) {
+      // Check if it contains an array
+      const nestedKeys = Object.keys(gameContent.questions);
+      console.log("Questions object keys:", nestedKeys);
+      
+      if (nestedKeys.includes('questions') && Array.isArray(gameContent.questions.questions)) {
+        console.log("Found nested questions array");
+        return gameContent.questions.questions;
+      }
+      
+      // Check if the object itself is a questions array with numeric keys
+      if (nestedKeys.some(key => !isNaN(parseInt(key)))) {
+        console.log("Found questions object with numeric keys");
+        return Object.values(gameContent.questions);
+      }
+    }
+    
+    // Case 3: Check if the entire content object itself is the questions array
+    if (gameContent && typeof gameContent === 'object') {
+      const keys = Object.keys(gameContent);
+      if (keys.includes('0') && keys.some(key => !isNaN(parseInt(key)))) {
+        console.log("Content itself appears to be the questions array");
+        return Object.values(gameContent);
+      }
+    }
+    
+    // Case 4: If we have an object with numeric keys that contains question objects
+    if (typeof gameContent === 'object' && gameContent !== null) {
+      const keys = Object.keys(gameContent);
+      if (keys.some(key => !isNaN(parseInt(key))) && 
+          typeof gameContent[keys[0]] === 'object' &&
+          gameContent[keys[0]] !== null &&
+          'text' in gameContent[keys[0]]) {
+        console.log("Found questions as direct numeric properties");
+        return Object.values(gameContent);
+      }
+    }
+    
+    console.log("No valid questions structure found");
+    return [];
+  };
+
+  // Debug logging to check game data structure
+  useEffect(() => {
+    if (game) {
+      console.log("Complete quiz game object:", game);
+      
+      if (game && game.content) {
+        console.log("Quiz game content structure:", game.content);
+        const questions = extractQuestions(game.content);
+        if (questions && questions.length > 0) {
+          console.log(`Successfully extracted ${questions.length} quiz questions:`, questions);
+          setExtractedQuestions(questions);
+        } else {
+          console.error("Failed to extract valid questions from quiz game content");
+        }
+      }
+    }
+  }, [game]);
   
   // Fetch game data if not provided in location state
   useEffect(() => {
@@ -394,7 +468,7 @@ const QuizGamePage = () => {
   };
   
   const handleNextQuestion = () => {
-    if (currentQuestion < game.content.questions.length - 1) {
+    if (extractedQuestions.length > 0 && currentQuestion < extractedQuestions.length - 1) {
       setCurrentQuestion(prev => prev + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -408,6 +482,8 @@ const QuizGamePage = () => {
   };
   
   const checkIfAnswered = (question) => {
+    if (!question) return false;
+    
     if (question.type === 'true_false') {
       return !!answers[question.id];
     } else if (question.type === 'fill_blank') {
@@ -417,12 +493,12 @@ const QuizGamePage = () => {
   };
   
   const calculateScore = () => {
-    if (!game) return 0;
+    if (!extractedQuestions || extractedQuestions.length === 0) return 0;
     
-    const questions = game.content.questions;
     let correctCount = 0;
+    let totalQuestions = extractedQuestions.length;
     
-    questions.forEach(question => {
+    extractedQuestions.forEach(question => {
       if (question.type === 'true_false') {
         if (answers[question.id] === question.correct_answer) {
           correctCount++;
@@ -438,7 +514,7 @@ const QuizGamePage = () => {
       }
     });
     
-    return Math.round((correctCount / questions.length) * 100);
+    return Math.round((correctCount / totalQuestions) * 100);
   };
   
   const getResultMessage = (score) => {
@@ -514,12 +590,37 @@ const QuizGamePage = () => {
     );
   }
   
+  // Check if game content is properly formatted
+  if (!game.content || extractedQuestions.length === 0) {
+    return (
+      <PageSection>
+        <div className="bg-shape shape-1"></div>
+        <div className="bg-shape shape-2"></div>
+        <Container>
+          <Card>
+            <h2>Error: Invalid Game Content</h2>
+            <p>This game doesn't contain valid questions. Please try another game or contact support.</p>
+            <Button 
+              onClick={() => navigate('/games')}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Back to Games
+            </Button>
+          </Card>
+        </Container>
+      </PageSection>
+    );
+  }
+  
   // Get current question data
-  const questions = game.content.questions;
-  const currentQuestionData = questions[currentQuestion];
-  const progress = ((currentQuestion + 1) / questions.length) * 100;
+  const questions = extractedQuestions;
+  const currentQuestionData = questions[currentQuestion] || {};
+  const progress = questions.length > 0 ? ((currentQuestion + 1) / questions.length) * 100 : 0;
   
   const renderQuestionContent = (question) => {
+    if (!question) return <div>Question data is missing</div>;
+    
     if (question.type === 'true_false') {
       return (
         <>
@@ -561,9 +662,8 @@ const QuizGamePage = () => {
       );
     }
     
-    return <div>Unsupported question type</div>;
+    return <div>Unsupported question type: {question.type || 'unknown'}</div>;
   };
-  
   return (
     <PageSection>
       <div className="bg-shape shape-1"></div>

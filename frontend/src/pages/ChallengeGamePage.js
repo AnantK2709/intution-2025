@@ -356,6 +356,7 @@ const fadeInUp = {
   }
 };
 
+
 const ChallengeGamePage = () => {
   const { gameId } = useParams();
   const location = useLocation();
@@ -368,12 +369,86 @@ const ChallengeGamePage = () => {
   const [result, setResult] = useState(null);
   const [stageStartTime, setStageStartTime] = useState(null);
   const [stageTimes, setStageTimes] = useState({});
+  const [extractedStages, setExtractedStages] = useState([]);
   const [loading, setLoading] = useState({
     game: !location.state?.game,
     submit: false
   });
   const [startTime] = useState(Date.now());
   const timerRef = useRef(null);
+  
+  // Helper function to extract stages from potentially nested structures
+  const extractStages = (gameContent) => {
+    if (!gameContent) return [];
+    
+    console.log("Analyzing challenge game content:", gameContent);
+    
+    // Case 1: Direct array of stages
+    if (Array.isArray(gameContent.stages)) {
+      console.log("Found direct array of stages");
+      return gameContent.stages;
+    }
+    
+    // Case 2: Stages nested in an object
+    if (typeof gameContent.stages === 'object' && gameContent.stages !== null) {
+      // Check if it contains an array
+      const nestedKeys = Object.keys(gameContent.stages);
+      console.log("Stages object keys:", nestedKeys);
+      
+      if (nestedKeys.includes('stages') && Array.isArray(gameContent.stages.stages)) {
+        console.log("Found nested stages array");
+        return gameContent.stages.stages;
+      }
+      
+      // Check if the object itself is a stages array with numeric keys
+      if (nestedKeys.some(key => !isNaN(parseInt(key)))) {
+        console.log("Found stages object with numeric keys");
+        return Object.values(gameContent.stages);
+      }
+    }
+    
+    // Case 3: Check if the entire content object itself is the stages array
+    if (gameContent && typeof gameContent === 'object') {
+      const keys = Object.keys(gameContent);
+      if (keys.includes('0') && keys.some(key => !isNaN(parseInt(key)))) {
+        console.log("Content itself appears to be the stages array");
+        return Object.values(gameContent);
+      }
+    }
+    
+    // Case 4: If we have an object with numeric keys that contains stage objects
+    if (typeof gameContent === 'object' && gameContent !== null) {
+      const keys = Object.keys(gameContent);
+      if (keys.some(key => !isNaN(parseInt(key))) && 
+          typeof gameContent[keys[0]] === 'object' &&
+          gameContent[keys[0]] !== null &&
+          'task' in gameContent[keys[0]]) {
+        console.log("Found stages as direct numeric properties");
+        return Object.values(gameContent);
+      }
+    }
+    
+    console.log("No valid stages structure found");
+    return [];
+  };
+
+  // Debug logging to check game data structure
+  useEffect(() => {
+    if (game) {
+      console.log("Complete challenge game object:", game);
+      
+      if (game && game.content) {
+        console.log("Challenge game content structure:", game.content);
+        const stages = extractStages(game.content);
+        if (stages && stages.length > 0) {
+          console.log(`Successfully extracted ${stages.length} challenge stages:`, stages);
+          setExtractedStages(stages);
+        } else {
+          console.error("Failed to extract valid stages from challenge game content");
+        }
+      }
+    }
+  }, [game]);
   
   // Fetch game data if not provided in location state
   useEffect(() => {
@@ -406,8 +481,8 @@ const ChallengeGamePage = () => {
   
   // Initialize timer when stage changes
   useEffect(() => {
-    if (game && game.content.stages && game.content.stages[currentStage]) {
-      const stage = game.content.stages[currentStage];
+    if (extractedStages.length > 0 && extractedStages[currentStage]) {
+      const stage = extractedStages[currentStage];
       const timeLimit = stage.time_limit || 120; // Default to 2 minutes if not specified
       
       setTimer(timeLimit);
@@ -436,7 +511,7 @@ const ChallengeGamePage = () => {
         clearInterval(timerRef.current);
       }
     };
-  }, [game, currentStage]);
+  }, [extractedStages, currentStage]);
   
   const handleResponseChange = (stageId, value) => {
     setResponses(prev => ({
@@ -446,17 +521,17 @@ const ChallengeGamePage = () => {
   };
   
   const handleNextStage = () => {
-    if (game && game.content.stages) {
+    if (extractedStages.length > 0) {
       // Record completion time for current stage
       const elapsedTime = Math.round((Date.now() - stageStartTime) / 1000);
       
       setStageTimes(prev => ({
         ...prev,
-        [game.content.stages[currentStage].id]: elapsedTime
+        [extractedStages[currentStage].id]: elapsedTime
       }));
       
       // Move to next stage
-      if (currentStage < game.content.stages.length - 1) {
+      if (currentStage < extractedStages.length - 1) {
         setCurrentStage(prev => prev + 1);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -471,9 +546,9 @@ const ChallengeGamePage = () => {
   };
   
   const calculateScore = () => {
-    if (!game || !game.content.stages) return 0;
+    if (!extractedStages || extractedStages.length === 0) return 0;
     
-    const stages = game.content.stages;
+    const stages = extractedStages;
     let totalPoints = 0;
     let earnedPoints = 0;
     
@@ -519,12 +594,12 @@ const ChallengeGamePage = () => {
   
   const handleSubmit = async () => {
     // Record completion time for final stage if not already recorded
-    if (game && game.content.stages && !stageTimes[game.content.stages[currentStage].id]) {
+    if (extractedStages.length > 0 && !stageTimes[extractedStages[currentStage].id]) {
       const elapsedTime = Math.round((Date.now() - stageStartTime) / 1000);
       
       setStageTimes(prev => ({
         ...prev,
-        [game.content.stages[currentStage].id]: elapsedTime
+        [extractedStages[currentStage].id]: elapsedTime
       }));
     }
     
@@ -591,10 +666,33 @@ const ChallengeGamePage = () => {
     );
   }
   
+  // Check if game content is properly formatted
+  if (!game.content || extractedStages.length === 0) {
+    return (
+      <PageSection>
+        <div className="bg-shape shape-1"></div>
+        <div className="bg-shape shape-2"></div>
+        <Container>
+          <Card>
+            <h2>Error: Invalid Game Content</h2>
+            <p>This game doesn't contain valid stages. Please try another game or contact support.</p>
+            <Button 
+              onClick={() => navigate('/games')}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Back to Games
+            </Button>
+          </Card>
+        </Container>
+      </PageSection>
+    );
+  }
+  
   // Get current stage data
-  const stages = game.content.stages;
-  const currentStageData = stages[currentStage];
-  const progress = ((currentStage + 1) / stages.length) * 100;
+  const stages = extractedStages;
+  const currentStageData = stages[currentStage] || {};
+  const progress = stages.length > 0 ? ((currentStage + 1) / stages.length) * 100 : 0;
   const timeRunningOut = timer <= 30; // 30 seconds remaining
   
   return (
