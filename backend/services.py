@@ -362,87 +362,338 @@ def save_user_progress(progress: UserProgress):
 
 # Main service functions
 def create_game_service(request: GamificationRequest) -> GameContent:
-    """Generate a game based on the change management requirements"""
+    """Generate a game based on the change management requirements using AI"""
     
     # Generate a unique game ID
     game_id = f"game_{uuid.uuid4().hex[:8]}"
     
-    # Define game content based on game type
+    # Create the base game object first
+    title = generate_game_title(request.change_name, request.game_type, request.adkar_stage)
+    description = generate_game_description(request.change_description, request.adkar_stage)
+    instructions = generate_instructions(request.game_type)
+    badges = create_badges_for_adkar(request.adkar_stage)
+    points = calculate_points(request.game_type, len(request.key_points), request.adkar_stage)
+    
+    # Define game content based on game type, using OpenAI for generation
     content = {}
     
+    # Format key points for better prompting
+    key_points_formatted = "\n".join([f"- {point}" for point in request.key_points])
+    
     if request.game_type == "mcq":
-        # Create multiple choice questions based on key points
-        questions = []
-        for i, point in enumerate(request.key_points):
-            # Generate a question based on the key point
-            question = {
-                "id": f"q{i+1}",
-                "text": f"Which of the following best describes {point}?",
-                "options": [
-                    {"id": "a", "text": generate_correct_answer(point)},
-                    {"id": "b", "text": generate_wrong_answer(point, 1)},
-                    {"id": "c", "text": generate_wrong_answer(point, 2)},
-                    {"id": "d", "text": generate_wrong_answer(point, 3)}
-                ],
-                "correct_answer": "a"
-            }
-            questions.append(question)
-        content = {"questions": questions}
+        # Use AI to generate multiple choice questions
+        prompt = f"""
+        Create engaging multiple-choice questions for a change management game on: {request.change_name}
+        
+        ## CONTEXT
+        - Change type: {request.change_type}
+        - Audience: {request.audience} with {request.tech_proficiency} technical proficiency
+        - ADKAR stage: {request.adkar_stage}
+        
+        ## KEY POINTS TO COVER
+        {key_points_formatted}
+        
+        ## REQUIREMENTS
+        - Create {len(request.key_points)} multiple-choice questions, one for each key point above
+        - Each question should test understanding of the corresponding key point
+        - Each question should have 4 options (a, b, c, d) with only one correct answer
+        - Make the incorrect options plausible but clearly wrong
+        - The correct answer should always be option "a"
+        - Questions should be appropriate for the audience's technical proficiency
+        - Questions should align with the {request.adkar_stage} stage of the ADKAR model
+        
+        ## OUTPUT FORMAT
+        Return a JSON array of question objects with this structure:
+        [
+          {{
+            "id": "q1",
+            "text": "Question text?",
+            "options": [
+              {{"id": "a", "text": "Correct answer"}},
+              {{"id": "b", "text": "Wrong answer 1"}},
+              {{"id": "c", "text": "Wrong answer 2"}},
+              {{"id": "d", "text": "Wrong answer 3"}}
+            ],
+            "correct_answer": "a"
+          }},
+          // more questions...
+        ]
+        """
+        
+        # Call OpenAI API
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are an expert in change management and instructional design specializing in creating engaging learning games. You create clear, accurate, and educational game content that helps employees understand and adapt to organizational changes."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={"type": "json_object"}
+        )
+        
+        # Parse the response
+        try:
+            result = json.loads(response.choices[0].message.content)
+            content = {"questions": result}
+        except (json.JSONDecodeError, KeyError):
+            # Fallback to the original question generation logic if API fails
+            questions = []
+            for i, point in enumerate(request.key_points):
+                question = {
+                    "id": f"q{i+1}",
+                    "text": f"Which of the following best describes {point}?",
+                    "options": [
+                        {"id": "a", "text": generate_correct_answer(point)},
+                        {"id": "b", "text": generate_wrong_answer(point, 1)},
+                        {"id": "c", "text": generate_wrong_answer(point, 2)},
+                        {"id": "d", "text": generate_wrong_answer(point, 3)}
+                    ],
+                    "correct_answer": "a"
+                }
+                questions.append(question)
+            content = {"questions": questions}
         
     elif request.game_type == "quiz":
-        # Create quiz questions (true/false, fill in blanks, etc.)
-        questions = []
-        for i, point in enumerate(request.key_points):
-            question_type = "true_false" if i % 2 == 0 else "fill_blank"
-            
-            if question_type == "true_false":
-                question = {
-                    "id": f"q{i+1}",
-                    "type": "true_false",
-                    "text": generate_true_false_statement(point, i % 3 == 0),
-                    "correct_answer": "true" if i % 3 == 0 else "false"
-                }
-            else:
-                text, blank = generate_fill_blank_statement(point)
-                question = {
-                    "id": f"q{i+1}",
-                    "type": "fill_blank",
-                    "text": text,
-                    "blank": blank,
-                    "correct_answer": blank
-                }
-            questions.append(question)
-        content = {"questions": questions}
+        # Use AI to generate mixed question types
+        prompt = f"""
+        Create an engaging mixed quiz for a change management game on: {request.change_name}
+        
+        ## CONTEXT
+        - Change type: {request.change_type}
+        - Audience: {request.audience} with {request.tech_proficiency} technical proficiency
+        - ADKAR stage: {request.adkar_stage}
+        
+        ## KEY POINTS TO COVER
+        {key_points_formatted}
+        
+        ## REQUIREMENTS
+        - Create {len(request.key_points)} questions, one for each key point above
+        - Alternate between true/false questions and fill-in-the-blank questions
+        - For true/false questions:
+          - Include a clear statement about the key point
+          - Mix true and false statements approximately evenly
+          - Indicate the correct answer as "true" or "false"
+        - For fill-in-the-blank questions:
+          - Create a sentence with one key word or phrase missing
+          - The missing word should be critical to understanding
+          - Provide the correct word to fill in the blank
+        - Questions should be appropriate for the audience's technical proficiency
+        - Questions should align with the {request.adkar_stage} stage of the ADKAR model
+        
+        ## OUTPUT FORMAT
+        Return a JSON array of question objects with this structure:
+        [
+          {{
+            "id": "q1",
+            "type": "true_false",
+            "text": "Statement to judge as true or false",
+            "correct_answer": "true" or "false"
+          }},
+          {{
+            "id": "q2",
+            "type": "fill_blank",
+            "text": "Sentence with _____ missing",
+            "blank": "word",
+            "correct_answer": "word"
+          }},
+          // alternate between the two types...
+        ]
+        """
+        
+        # Call OpenAI API
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are an expert in change management and instructional design specializing in creating engaging learning games. You create clear, accurate, and educational game content that helps employees understand and adapt to organizational changes."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={"type": "json_object"}
+        )
+        
+        # Parse the response
+        try:
+            result = json.loads(response.choices[0].message.content)
+            content = {"questions": result}
+        except (json.JSONDecodeError, KeyError):
+            # Fallback to the original question generation logic
+            questions = []
+            for i, point in enumerate(request.key_points):
+                question_type = "true_false" if i % 2 == 0 else "fill_blank"
+                
+                if question_type == "true_false":
+                    question = {
+                        "id": f"q{i+1}",
+                        "type": "true_false",
+                        "text": generate_true_false_statement(point, i % 3 == 0),
+                        "correct_answer": "true" if i % 3 == 0 else "false"
+                    }
+                else:
+                    text, blank = generate_fill_blank_statement(point)
+                    question = {
+                        "id": f"q{i+1}",
+                        "type": "fill_blank",
+                        "text": text,
+                        "blank": blank,
+                        "correct_answer": blank
+                    }
+                questions.append(question)
+            content = {"questions": questions}
         
     elif request.game_type == "challenge":
-        # Create timed challenges
-        stages = []
-        for i, point in enumerate(request.key_points):
-            stage = {
-                "id": f"stage{i+1}",
-                "name": f"Stage {i+1}: {point[:30]}...",
-                "description": f"Apply your knowledge about {point}",
-                "task": generate_challenge_task(point, request.adkar_stage),
-                "time_limit": 120,  # 2 minutes per stage
-                "success_criteria": generate_success_criteria(point)
-            }
-            stages.append(stage)
-        content = {"stages": stages}
+        # Use AI to generate timed challenges
+        prompt = f"""
+        Create engaging timed challenges for a change management game on: {request.change_name}
+        
+        ## CONTEXT
+        - Change type: {request.change_type}
+        - Audience: {request.audience} with {request.tech_proficiency} technical proficiency
+        - ADKAR stage: {request.adkar_stage}
+        
+        ## KEY POINTS TO COVER
+        {key_points_formatted}
+        
+        ## REQUIREMENTS
+        - Create {len(request.key_points)} challenge stages, one for each key point above
+        - Each challenge should:
+          - Have a clear, concise name
+          - Include a brief description that sets context
+          - Provide a specific task related to the key point
+          - Define clear success criteria
+        - Tasks should vary in nature (explanation, application, analysis, etc.)
+        - Each challenge has a time limit of 120 seconds (2 minutes)
+        - Challenges should be appropriate for the audience's technical proficiency
+        - Challenges should align with the {request.adkar_stage} stage of the ADKAR model
+        
+        ## OUTPUT FORMAT
+        Return a JSON array of stage objects with this structure:
+        [
+          {{
+            "id": "stage1",
+            "name": "Stage name",
+            "description": "Brief description of what this stage is about",
+            "task": "Specific instruction for what the user needs to do",
+            "time_limit": 120,
+            "success_criteria": "How the response will be evaluated"
+          }},
+          // more stages...
+        ]
+        """
+        
+        # Call OpenAI API
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are an expert in change management and instructional design specializing in creating engaging learning games. You create clear, accurate, and educational game content that helps employees understand and adapt to organizational changes."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={"type": "json_object"}
+        )
+        
+        # Parse the response
+        try:
+            result = json.loads(response.choices[0].message.content)
+            content = {"stages": result}
+        except (json.JSONDecodeError, KeyError):
+            # Fallback to the original stage generation logic
+            stages = []
+            for i, point in enumerate(request.key_points):
+                stage = {
+                    "id": f"stage{i+1}",
+                    "name": f"Stage {i+1}: {point[:30]}...",
+                    "description": f"Apply your knowledge about {point}",
+                    "task": generate_challenge_task(point, request.adkar_stage),
+                    "time_limit": 120,  # 2 minutes per stage
+                    "success_criteria": generate_success_criteria(point)
+                }
+                stages.append(stage)
+            content = {"stages": stages}
         
     elif request.game_type == "simulation":
-        # Create a scenario-based simulation
-        scenarios = []
-        for i, point in enumerate(request.key_points):
-            decisions = generate_simulation_decisions(point)
-            scenario = {
-                "id": f"scenario{i+1}",
-                "title": f"Scenario {i+1}: Implementing {point[:30]}...",
-                "description": generate_scenario_description(point, request.change_type),
-                "decisions": decisions,
-                "outcomes": generate_outcomes(decisions)
-            }
-            scenarios.append(scenario)
-        content = {"scenarios": scenarios}
+        # Use AI to generate scenario-based simulations
+        prompt = f"""
+        Create engaging decision-based scenarios for a change management simulation on: {request.change_name}
+        
+        ## CONTEXT
+        - Change type: {request.change_type}
+        - Audience: {request.audience} with {request.tech_proficiency} technical proficiency
+        - ADKAR stage: {request.adkar_stage}
+        
+        ## KEY POINTS TO COVER
+        {key_points_formatted}
+        
+        ## REQUIREMENTS
+        - Create {len(request.key_points)} scenarios, one for each key point above
+        - Each scenario should:
+          - Have a clear, compelling title
+          - Include a realistic description of a change management situation
+          - Present 3 different decision options with varying approaches
+          - For each decision, define meaningful outcomes with impacts on:
+            - Timeline (speed of implementation)
+            - Adoption (how well people accept the change)
+            - Results (effectiveness of the change)
+        - Decisions should have different tradeoffs - no obvious "right" answers
+        - Impact values should range from -30 to +30
+        - Scenarios should be appropriate for the audience's technical proficiency
+        - Scenarios should align with the {request.adkar_stage} stage of the ADKAR model
+        
+        ## OUTPUT FORMAT
+        Return a JSON array of scenario objects with this structure:
+        [
+          {{
+            "id": "scenario1",
+            "title": "Scenario title",
+            "description": "Description of the situation",
+            "decisions": [
+              {{ "id": "d1", "text": "Decision option 1", "outcome_id": "o1" }},
+              {{ "id": "d2", "text": "Decision option 2", "outcome_id": "o2" }},
+              {{ "id": "d3", "text": "Decision option 3", "outcome_id": "o3" }}
+            ],
+            "outcomes": {{
+              "o1": {{ 
+                "text": "Outcome description", 
+                "impact": {{ "timeline": 10, "adoption": -20, "results": 15 }}
+              }},
+              "o2": {{ 
+                "text": "Outcome description", 
+                "impact": {{ "timeline": -5, "adoption": 25, "results": 10 }}
+              }},
+              "o3": {{ 
+                "text": "Outcome description", 
+                "impact": {{ "timeline": -15, "adoption": 5, "results": 30 }}
+              }}
+            }}
+          }},
+          // more scenarios...
+        ]
+        """
+        
+        # Call OpenAI API
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are an expert in change management and instructional design specializing in creating engaging learning games. You create clear, accurate, and educational game content that helps employees understand and adapt to organizational changes."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={"type": "json_object"}
+        )
+        
+        # Parse the response
+        try:
+            result = json.loads(response.choices[0].message.content)
+            content = {"scenarios": result}
+        except (json.JSONDecodeError, KeyError):
+            # Fallback to the original scenario generation logic
+            scenarios = []
+            for i, point in enumerate(request.key_points):
+                decisions = generate_simulation_decisions(point)
+                scenario = {
+                    "id": f"scenario{i+1}",
+                    "title": f"Scenario {i+1}: Implementing {point[:30]}...",
+                    "description": generate_scenario_description(point, request.change_type),
+                    "decisions": decisions,
+                    "outcomes": generate_outcomes(decisions)
+                }
+                scenarios.append(scenario)
+            content = {"scenarios": scenarios}
     
     # Default to a simple knowledge check if game type is not recognized
     else:
@@ -451,19 +702,13 @@ def create_game_service(request: GamificationRequest) -> GameContent:
             "questions": [{"text": f"What do you know about {kp}?"} for kp in request.key_points]
         }
     
-    # Create badges based on ADKAR stage
-    badges = create_badges_for_adkar(request.adkar_stage)
-    
-    # Calculate points based on game complexity and ADKAR stage
-    points = calculate_points(request.game_type, len(request.key_points), request.adkar_stage)
-    
     # Create the game object
     game = GameContent(
         game_id=game_id,
         game_type=request.game_type,
-        title=generate_game_title(request.change_name, request.game_type, request.adkar_stage),
-        description=generate_game_description(request.change_description, request.adkar_stage),
-        instructions=generate_instructions(request.game_type),
+        title=title,
+        description=description,
+        instructions=instructions,
         content=content,
         points=points,
         badges=badges,

@@ -7,6 +7,14 @@ import GlobalStyles from './styles/GlobalStyles';
 import { useSmoothScroll } from './hooks/useAnimations';
 import PromptFlowPage from './pages/PromptFlowPage';
 import StrategyAssistantPage from './pages/StrategyAssistantPage';
+
+// Game Pages
+import GamificationPage from './pages/GamificationPage';
+import MCQGamePage from './pages/MCQGamePage';
+import QuizGamePage from './pages/QuizGamePage';
+import ChallengeGamePage from './pages/ChallengeGamePage';
+import SimulationGamePage from './pages/SimulationGamePage';
+
 // Components
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -93,7 +101,13 @@ const AnimatedRoutes = () => {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="*" element={<NotFoundPage />} />
           <Route path="/generate-email" element={<PromptFlowPage />} />
-
+          
+          {/* Gamification Routes */}
+          <Route path="/games" element={<GamificationPage />} />
+          <Route path="/play/mcq/:gameId" element={<MCQGamePage />} />
+          <Route path="/play/quiz/:gameId" element={<QuizGamePage />} />
+          <Route path="/play/challenge/:gameId" element={<ChallengeGamePage />} />
+          <Route path="/play/simulation/:gameId" element={<SimulationGamePage />} />
         </Routes>
       </motion.div>
     </AnimatePresence>
