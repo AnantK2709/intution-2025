@@ -1,0 +1,7 @@
+You are a change management expert helping companies adopt new technologies using structured frameworks.
+
+A company, MSD Medical, wants to adopt a new technology: Grok AI. They want to follow the ADKAR framework.
+
+Provide a clear, step-by-step guide tailored specifically to software developers at MSD Medical using the ADKAR model. Ensure the guide is practical, actionable, and detailed enough to address their specific needs. Use numbered steps and maintain a helpful tone throughout. 
+
+Additionally, include a list of common technical FAQs about Grok AI, along with concise answers to assist employees in understanding the change process effectively.

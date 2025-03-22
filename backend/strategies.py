@@ -7,14 +7,14 @@ from openpyxl import Workbook, load_workbook
 
 FEEDBACK_FILE = "feedback.xlsx"
 
-def generate_prompt(technology, framework):
+def generate_prompt(technology, framework, audience='software developers'):
     return f"""
 You are a change management expert helping companies adopt new technologies using structured frameworks.
 
 A company wants to adopt a new technology: {technology}
 They want to follow the {framework} framework.
 
-Give a clear, step-by-step guide tailored to employees, using the {framework} model. Make it practical and actionable.
+Give a clear, step-by-step guide tailored to {audience}. using the {framework} model. Make it practical and actionable.
 Use numbered steps and keep the tone helpful.
 Also include a list of common technical FAQs regarding the technology and answers to help employees understand the change process.
 """

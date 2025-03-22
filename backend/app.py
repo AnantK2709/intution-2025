@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from models import CommunicationRequest, DraftReviewRequest, ScoredDraft, FeedbackRequest, EmailRequest, StrategyRequest
 from services import create_draft_service, review_draft_service
-from feedback import save_feedback, count_pending_feedback, process_feedback_batch
+
 from strategies import generate_prompt, save_feedback_to_excel, get_feedback_batch, refine_prompt_with_feedback, generate_adoption_guide, mark_feedback_as_processed, run_strategy_workflow
 from email_utils import send_email_to_employees
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,30 +23,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/feedback_strategies")
-def submit_feedback(request: FeedbackRequest):
-    try:
-        # Save new feedback
-        save_feedback_to_excel(request.original_prompt, request.feedback)
 
-        # If 5+ new feedbacks, improve prompt
-        batch = get_feedback_batch()
-        if len(batch) >= 5:
-            combined_feedback = "\n".join([f"- {entry[2]}" for entry in batch])
-            improved_prompt = refine_prompt_with_feedback(request.original_prompt, combined_feedback)
-            improved_guide = generate_adoption_guide(improved_prompt)
-            mark_feedback_as_processed([entry[0] for entry in batch])
-
-            return {
-                "message": "Thanks for your feedback! We've used it to improve the prompt.",
-                "improved_prompt": improved_prompt,
-                "improved_guide": improved_guide
-            }
-
-        return {"message": "Thanks for your feedback! We'll use it to improve future responses."}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 @app.post("/strategies")
 def get_strategy(request: StrategyRequest):
     try:
@@ -59,30 +36,7 @@ def get_strategy(request: StrategyRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@app.post("/feedback_strategies")
-def submit_feedback(request: FeedbackRequest):
-    try:
-        # Save new feedback
-        save_feedback_to_excel(request.original_prompt, request.feedback)
 
-        # If 5+ new feedbacks, improve prompt
-        batch = get_feedback_batch()
-        if len(batch) >= 5:
-            combined_feedback = "\n".join([f"- {entry[2]}" for entry in batch])
-            improved_prompt = refine_prompt_with_feedback(request.original_prompt, combined_feedback)
-            improved_guide = generate_adoption_guide(improved_prompt)
-            mark_feedback_as_processed([entry[0] for entry in batch])
-
-            return {
-                "message": "Thanks for your feedback! We've used it to improve the prompt.",
-                "improved_prompt": improved_prompt,
-                "improved_guide": improved_guide
-            }
-
-        return {"message": "Thanks for your feedback! We'll use it to improve future responses."}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
     
 
 @app.post("/send_approved_draft")
@@ -118,24 +72,7 @@ async def review_draft(request: DraftReviewRequest):
         return review_draft_service(request)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-@app.post("/submit_feedback")
-async def submit_feedback(request: FeedbackRequest):
-    try:
-        save_feedback(request.original_prompt, request.feedback)
-        feedback_count = count_pending_feedback()
-        
-        if feedback_count >= 5:
-            improved_prompt, improved_draft = process_feedback_batch()
-            return {
-                "message": "Feedback processed and improved prompt generated.",
-                "improved_prompt": improved_prompt,
-                "improved_draft": improved_draft
-            }
-        
-        return {"message": f"Feedback saved. Waiting for {5 - feedback_count} more to process."}
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+
     
 @app.post("/create_game", response_model=GameContent)
 async def create_game(request: GamificationRequest):
@@ -178,7 +115,43 @@ async def recommend_games(user_id: str, limit: int = 3):
         return recommend_games_service(user_id, limit)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+from feedback_handler import process_immediate_feedback, process_training_feedback
+from models import FeedbackRequest
+
+@app.post("/feedback_immediate")
+def feedback_immediate(request: FeedbackRequest):
+    try:
+        improved_prompt, improved_guide = process_immediate_feedback(
+            request.original_prompt, request.feedback
+        )
+        return {
+            "message": "Guide updated based on your feedback.",
+            "improved_prompt": improved_prompt,
+            "improved_guide": improved_guide
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/feedback_training")
+def feedback_training(request: FeedbackRequest):
+    try:
+        improved_prompt, improved_guide = process_training_feedback(
+            request.original_prompt, request.feedback
+        )
+
+        if improved_prompt:
+            return {
+                "message": "Batch of 5 feedbacks processed. New guide generated.",
+                "improved_prompt": improved_prompt,
+                "improved_guide": improved_guide
+            }
+        else:
+            return {"message": "Feedback saved. Waiting for more to process."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Run the application
 if __name__ == "__main__":
     import uvicorn
