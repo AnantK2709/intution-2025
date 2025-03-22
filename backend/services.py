@@ -53,7 +53,7 @@ def create_draft_service(request: CommunicationRequest):
     - Keep paragraphs short and use formatting to aid readability
     - Use MSD's preferred communication style
     
-    Create a draft that reads as a complete, ready-to-send communication that will drive successful change adoption.
+    Create a draft that reads as a complete, ready-to-send communication that will drive successful change adoption. Feel free to change the language to a more professional tone if needed. For example biz can be changed to business
     """
     
     # Get scholarly references if requested
@@ -170,3 +170,36 @@ def review_draft_service(request: DraftReviewRequest):
         raise Exception("Failed to parse response from OpenAI.")
     
     return ScoredDraft(**result_dict)
+def refine_prompt_with_feedback(original_prompt: str, combined_feedback: str) -> str:
+    improvement_request = f"""
+You are a prompt engineer. Here's a prompt that was used with GPT:
+
+---
+{original_prompt}
+---
+
+The user was not satisfied with the result and gave the following feedback:
+{combined_feedback}
+
+Please improve the original prompt based on this feedback. Only output the improved prompt, nothing else.
+"""
+
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "user", "content": improvement_request}
+        ],
+        temperature=0.3,
+    )
+    return response.choices[0].message.content.strip()
+
+
+def generate_adoption_guide(prompt: str) -> str:
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.2,
+    )
+    return response.choices[0].message.content.strip()

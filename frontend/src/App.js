@@ -5,14 +5,14 @@ import styled from 'styled-components';
 import { ThemeProvider } from './context/ThemeContext';
 import GlobalStyles from './styles/GlobalStyles';
 import { useSmoothScroll } from './hooks/useAnimations';
-
+import PromptFlowPage from './pages/PromptFlowPage';
+import StrategyAssistantPage from './pages/StrategyAssistantPage';
 // Components
 import Header from './components/Header';
 import Footer from './components/Footer';
 
 // Pages
 import HomePage from './pages/HomePage';
-import WorkPage from './pages/WorkPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import WorkDetailPage from './pages/WorkDetailPage';
@@ -88,11 +88,13 @@ const AnimatedRoutes = () => {
       >
         <Routes location={location}>
           <Route path="/" element={<HomePage />} />
-          <Route path="/work" element={<WorkPage />} />
+          <Route path="/work" element={<PromptFlowPage />} />
           <Route path="/work/:slug" element={<WorkDetailPage />} />
-          <Route path="/about" element={<AboutPage />} />
+          <Route path="/about" element={<StrategyAssistantPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="*" element={<NotFoundPage />} />
+          <Route path="/generate-email" element={<PromptFlowPage />} />
+
         </Routes>
       </motion.div>
     </AnimatePresence>

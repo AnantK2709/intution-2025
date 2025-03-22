@@ -1,7 +1,22 @@
 from pydantic import BaseModel
 from typing import List, Optional
+from typing import List
 
-# Enhanced data models
+class FeedbackRequest(BaseModel):
+    original_prompt: str
+    feedback: str
+
+class StrategyRequest(BaseModel):
+    technology: str
+    framework: str
+    feedback: str = None  # Optional
+
+class EmailRequest(BaseModel):
+    subject: str
+    message: str
+    recipients: List[str]
+
+
 class CommunicationRequest(BaseModel):
     change_type: str  # technology, process, organizational, policy, structural
     audience: str  # specific roles, departments, levels
