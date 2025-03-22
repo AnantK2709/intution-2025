@@ -341,67 +341,67 @@ const PromptFlowPage = () => {
 
   // Function to navigate to game creation with form data
   // Function to navigate to game creation with form data
-// Helper function to determine ADKAR stage based on content
-const determineAdkarStage = () => {
-  const content = (draft + form.key_points + form.purpose).toLowerCase();
-  
-  // Simple keyword matching to determine ADKAR stage
-  if (content.includes('why') || content.includes('reason') || content.includes('inform') || content.includes('announce')) {
-    return 'awareness';
-  } else if (content.includes('benefit') || content.includes('advantage') || content.includes('impact')) {
-    return 'desire';
-  } else if (content.includes('how to') || content.includes('train') || content.includes('learn')) {
-    return 'knowledge';
-  } else if (content.includes('implement') || content.includes('skill') || content.includes('practice')) {
-    return 'ability';
-  } else if (content.includes('maintain') || content.includes('sustain') || content.includes('continue')) {
-    return 'reinforcement';
-  }
-  
-  // Default to awareness
-  return 'awareness';
-};
+  // Helper function to determine ADKAR stage based on content
+  const determineAdkarStage = () => {
+    const content = (draft + form.key_points + form.purpose).toLowerCase();
 
-// Function to navigate to game creation with form data
-const handleCreateGame = () => {
-  // Make sure key_points is properly split into an array
-  const keyPointsArray = form.key_points
-    .split('\n')
-    .filter(point => point.trim() !== '');
-  
-  // Log for debugging
-  console.log("Creating game with", keyPointsArray.length, "key points:", keyPointsArray);
-  
-  // If there's only one or no key points, add some defaults
-  let finalKeyPoints = keyPointsArray;
-  if (keyPointsArray.length <= 1) {
-    finalKeyPoints = [
-      form.purpose,
-      "Understanding the benefits of this change",
-      "Key implementation steps for this change",
-      "How this affects daily workflows"
-    ];
-  }
-  
-  // Determine ADKAR stage
-  const adkarStage = determineAdkarStage();
-  console.log("Determined ADKAR stage:", adkarStage);
-  
-  // Convert the form data to the format needed for game creation
-  const gameData = {
-    change_type: form.change_type.split('_')[0] || 'technology', 
-    audience: form.audience || 'all_employees',
-    tech_proficiency: form.tech_proficiency || 'medium',
-    change_name: form.purpose,
-    change_description: draft.split('\n')[0] || form.purpose, 
-    adkar_stage: adkarStage, 
-    game_type: 'mcq',
-    key_points: finalKeyPoints  // Use our processed key points array
+    // Simple keyword matching to determine ADKAR stage
+    if (content.includes('why') || content.includes('reason') || content.includes('inform') || content.includes('announce')) {
+      return 'awareness';
+    } else if (content.includes('benefit') || content.includes('advantage') || content.includes('impact')) {
+      return 'desire';
+    } else if (content.includes('how to') || content.includes('train') || content.includes('learn')) {
+      return 'knowledge';
+    } else if (content.includes('implement') || content.includes('skill') || content.includes('practice')) {
+      return 'ability';
+    } else if (content.includes('maintain') || content.includes('sustain') || content.includes('continue')) {
+      return 'reinforcement';
+    }
+
+    // Default to awareness
+    return 'awareness';
   };
-  
-  // Navigate to games page with state data
-  navigate('/games', { state: { gameCreationData: gameData }});
-};
+
+  // Function to navigate to game creation with form data
+  const handleCreateGame = () => {
+    // Make sure key_points is properly split into an array
+    const keyPointsArray = form.key_points
+      .split('\n')
+      .filter(point => point.trim() !== '');
+
+    // Log for debugging
+    console.log("Creating game with", keyPointsArray.length, "key points:", keyPointsArray);
+
+    // If there's only one or no key points, add some defaults
+    let finalKeyPoints = keyPointsArray;
+    if (keyPointsArray.length <= 1) {
+      finalKeyPoints = [
+        form.purpose,
+        "Understanding the benefits of this change",
+        "Key implementation steps for this change",
+        "How this affects daily workflows"
+      ];
+    }
+
+    // Determine ADKAR stage
+    const adkarStage = determineAdkarStage();
+    console.log("Determined ADKAR stage:", adkarStage);
+
+    // Convert the form data to the format needed for game creation
+    const gameData = {
+      change_type: form.change_type.split('_')[0] || 'technology',
+      audience: form.audience || 'all_employees',
+      tech_proficiency: form.tech_proficiency || 'medium',
+      change_name: form.purpose,
+      change_description: draft.split('\n')[0] || form.purpose,
+      adkar_stage: adkarStage,
+      game_type: 'mcq',
+      key_points: finalKeyPoints  // Use our processed key points array
+    };
+
+    // Navigate to games page with state data
+    navigate('/games', { state: { gameCreationData: gameData } });
+  };
 
   // Your existing functions
   const handleChange = (e) => {
@@ -853,6 +853,51 @@ const handleCreateGame = () => {
                     whileTap={{ scale: 0.98 }}
                   >
                     Start Another Communication
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/faq', { state: { formData: form } })}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      style={{ marginRight: '0.5rem' }}
+                    >
+                      <path
+                        d="M9.09 9C9.03043 9.58008 9.21642 10.1559 9.6 10.59C9.96857 11.0226 10.1747 11.5778 10.18 12.15C10.18 13.54 9.18 14.7 7.89 14.93C7.01873 15.0549 6.12908 14.8117 5.46961 14.2723C4.81014 13.7328 4.44214 12.9549 4.46 12.14C4.42864 11.5894 4.60454 11.0458 4.95 10.62C5.3202 10.1853 5.52557 9.62825 5.53 9.05C5.53 7.64 6.53 6.47 7.82 6.24C8.69127 6.11508 9.58092 6.35828 10.2404 6.89776C10.8998 7.43724 11.2678 8.21511 11.25 9.03C11.2736 9.57982 11.1045 10.1201 10.75 10.54C10.3775 10.98 10.1535 11.5451 10.16 12.13"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M12 17H12.01"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M19.09 17C19.3251 17.0008 19.5458 17.1075 19.7016 17.2835C19.8573 17.4595 19.9332 17.6905 19.91 17.92C19.7651 18.9406 19.3081 19.8889 18.5971 20.6233C17.886 21.3577 16.9562 21.8421 15.9393 22.0062C14.9225 22.1704 13.8808 22.0054 12.9616 21.5398C12.0425 21.0741 11.2982 20.337 10.8494 19.4339C10.4006 18.5308 10.2753 17.5147 10.493 16.5373C10.7106 15.5599 11.2591 14.68 12.0412 14.0195C12.8233 13.359 13.7872 12.9546 14.8 12.86C15.2088 12.8291 15.6177 12.8495 16.02 12.92"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M7.09 7C6.85492 6.99921 6.63422 6.89249 6.47844 6.71652C6.32266 6.54054 6.24682 6.30953 6.27 6.08C6.41496 5.05944 6.87195 4.11115 7.58301 3.37677C8.29407 2.64239 9.22386 2.15795 10.2407 1.99382C11.2575 1.82969 12.2992 1.99467 13.2184 2.46028C14.1375 2.92588 14.8819 3.66299 15.3307 4.56613C15.7795 5.46927 15.9048 6.48537 15.687 7.46277C15.4694 8.44017 14.9209 9.32007 14.1388 9.98054C13.3567 10.641 12.3928 11.0455 11.38 11.14C10.9712 11.1708 10.5623 11.1505 10.16 11.08"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    Generate FAQ for Employees
                   </Button>
                 </div>
               )}

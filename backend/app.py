@@ -8,14 +8,14 @@ from strategies import generate_prompt, save_feedback_to_excel, get_feedback_bat
 from email_utils import send_email_to_employees
 from models import (CommunicationRequest, DraftReviewRequest, GameCompletionRequest,
                    GameListResponse, GameRecommendationResponse, GamificationRequest,
-                   GameContent, ScoredDraft, UserProgressResponse)
+                   GameContent, ScoredDraft, UserProgressResponse, StrategyRequest, EmailRequest)
 from services import (create_draft_service, review_draft_service, create_game_service,
                      complete_game_service, get_games_service, get_user_progress_service,
                      recommend_games_service)
-
+from config import client
 from models import EmailRequest, StrategyRequest
 from rag import ChangeManagementRAG  # Import your ChangeManagementRAG class
-
+from faq_service import router as faq_router
 # Initialize FastAPI
 app = FastAPI(title="MSD Change Management Communication Assistant")
 app.add_middleware(
@@ -25,6 +25,7 @@ app.add_middleware(
     allow_methods=["*"],  # You can also specify ["POST"]
     allow_headers=["*"],
 )
+app.include_router(faq_router)
 
 
 # Add CORS middleware
@@ -358,6 +359,108 @@ async def upload_document(background_tasks: BackgroundTasks, file: UploadFile = 
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"File upload failed: {str(e)}")
+    
+class FAQRequest(BaseModel):
+    change_type: str  # technology, process, organizational, policy, structural
+    audience: str  # specific roles, departments, levels
+    tech_proficiency: str  # low, medium, high
+    key_points: List[str]
+    purpose: str  # inform, instruct, inspire, reassure, prepare
+
+class FAQItem(BaseModel):
+    question: str
+    answer: str
+
+class FAQResponse(BaseModel):
+    faqs: List[FAQItem]
+
+@app.post("/generate_faqs", response_model=FAQResponse)
+async def generate_faqs(request: FAQRequest):
+    """Generate FAQs to address common concerns about a change"""
+    try:
+        # Construct prompt for GPT-4o-mini
+        prompt = f"""
+        Generate a comprehensive set of FAQs (Frequently Asked Questions) that address common concerns, fears, and questions 
+        employees might have about an upcoming change at MSD.
+        
+        ## CHANGE DETAILS
+        Type of change: {request.change_type}
+        Target audience: {request.audience} with {request.tech_proficiency} technical proficiency
+        Primary purpose: {request.purpose}
+        
+        ## KEY INFORMATION
+        Key points about the change:
+        {chr(10).join(['- ' + str(point) for point in request.key_points])}
+        
+        ## FAQ REQUIREMENTS
+        1. Create 8-10 FAQs that specifically address:
+           - Emotional resistance to change
+           - Fear of job displacement or redundancy
+           - Concerns about skill obsolescence 
+           - Worries about learning new systems/processes
+           - Timeline and transition concerns
+           - Support and training availability
+           - How daily work will be affected
+           - Long-term implications
+        
+        2. For each FAQ:
+           - Write questions from the employee's perspective (using "I" or "we")
+           - Provide empathetic, honest, and reassuring answers
+           - Keep answers informative but concise (3-5 sentences)
+           - Address both emotional and practical concerns
+           - Include specific resources or support channels when relevant
+           - Use clear, non-technical language appropriate for the audience's proficiency level
+        
+        3. Format requirements:
+           - Make sure answers acknowledge concerns while providing factual reassurance
+           - Avoid generic corporate speak or dismissive tones
+           - Ensure each FAQ is unique and addresses different aspects of change anxiety
+        
+        Return the FAQs as a JSON array with objects containing 'question' and 'answer' fields.
+        """
+        
+        # Call GPT-4o-mini
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are an expert in change management and employee communications. You specialize in creating empathetic, honest, and reassuring content that addresses employee concerns about organizational changes, especially technological ones."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={"type": "json_object"}
+        )
+        
+        # Parse the JSON response
+        result = response.choices[0].message.content
+        
+        # Additional processing to ensure we return a proper list of FAQs
+        import json
+        result_dict = json.loads(result)
+        
+        # Handle different possible JSON structures
+        if isinstance(result_dict, list):
+            faqs = result_dict
+        elif 'faqs' in result_dict:
+            faqs = result_dict['faqs']
+        else:
+            # Try to find any key that might contain an array
+            for key, value in result_dict.items():
+                if isinstance(value, list) and len(value) > 0:
+                    if isinstance(value[0], dict) and 'question' in value[0] and 'answer' in value[0]:
+                        faqs = value
+                        break
+            else:
+                faqs = []
+                
+        # Ensure each FAQ has question and answer fields
+        validated_faqs = []
+        for faq in faqs:
+            if isinstance(faq, dict) and 'question' in faq and 'answer' in faq:
+                validated_faqs.append(FAQItem(question=faq['question'], answer=faq['answer']))
+        
+        return FAQResponse(faqs=validated_faqs)
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/health", response_model=HealthResponse)
 async def health_check():
