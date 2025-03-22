@@ -2,6 +2,10 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.msi
+*.zip
+*.exe
+*.iso
 
 # C extensions
 *.so

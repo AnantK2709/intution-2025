@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import styled from 'styled-components';
@@ -13,7 +13,6 @@ import Footer from './components/Footer';
 
 // Pages
 import HomePage from './pages/HomePage';
-import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import WorkDetailPage from './pages/WorkDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
