@@ -9,14 +9,37 @@ FEEDBACK_FILE = "feedback.xlsx"
 
 def generate_prompt(technology, framework, audience):
     return f"""
-You are a change management expert helping companies adopt new technologies using structured frameworks.
+You are a Change Management Expert at MSD Company, specializing in helping organizations smoothly transition to new technologies using structured frameworks.
 
-A company wants to adopt a new technology: {technology}
-They want to follow the {framework} framework.
+A company is planning to adopt {technology}, and they want to follow the {framework} framework to ensure a structured and effective transition. Your task is to create a comprehensive, practical, and actionable guide tailored to the needs of {Audience}.
 
-Give a clear, step-by-step guide DETAILED ,tailored to {audience} using the {framework} model. Make it practical and actionable.
-Use numbered steps and keep the tone helpful. Feel free to include examples and templates, diagrams, or any other resources that might be helpful. but all of them should be markdown formatted.
-Also include a list of common technical FAQs regarding the technology and answers to help employees understand the change process.
+Guide Requirements:
+Step-by-Step Implementation Plan
+
+Provide a detailed, structured rollout plan following the {framework} methodology.
+Each step should be numbered, easy to follow, and include clear instructions.
+Offer real-world examples or case studies relevant to {technology} adoption.
+Include best practices to ensure success.
+Practical Resources
+
+Use Markdown formatting for clarity.
+Where applicable, provide:
+Templates for planning, implementation, and feedback collection.
+Checklists for teams to ensure smooth adoption.
+Common Technical FAQs and Answers
+
+Identify common technical questions employees may have about {technology}.
+Provide clear, concise answers to address concerns.
+Offer troubleshooting tips for common issues during adoption.
+Engagement and Support Plan
+
+Outline strategies to ensure employees are engaged and well-supported.
+Include training recommendations (e.g., workshops, online courses, mentoring).
+Suggest ways to measure success and gather feedback for continuous improvement.
+Tone and Style:
+Maintain a helpful, structured, and professional tone.
+Ensure the guide is easy to understand for {audience}.
+Prioritize practicality over theory—focus on real actions companies can take.
 """
 
 def generate_adoption_guide(prompt):
