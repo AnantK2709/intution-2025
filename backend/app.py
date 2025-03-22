@@ -13,6 +13,7 @@ from services import (create_draft_service, review_draft_service, create_game_se
                      complete_game_service, get_games_service, get_user_progress_service,
                      recommend_games_service)
 
+from models import EmailRequest, StrategyRequest
 from rag import ChangeManagementRAG  # Import your ChangeManagementRAG class
 
 # Initialize FastAPI

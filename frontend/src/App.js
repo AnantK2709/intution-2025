@@ -7,6 +7,7 @@ import GlobalStyles from './styles/GlobalStyles';
 import { useSmoothScroll } from './hooks/useAnimations';
 import PromptFlowPage from './pages/PromptFlowPage';
 import StrategyAssistantPage from './pages/StrategyAssistantPage';
+import RAGQueryPage from './pages/RAGQueryPage';
 
 // Game Pages
 import GamificationPage from './pages/GamificationPage';
@@ -21,7 +22,6 @@ import Footer from './components/Footer';
 
 // Pages
 import HomePage from './pages/HomePage';
-import ContactPage from './pages/ContactPage';
 import WorkDetailPage from './pages/WorkDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -98,7 +98,7 @@ const AnimatedRoutes = () => {
           <Route path="/work" element={<PromptFlowPage />} />
           <Route path="/work/:slug" element={<WorkDetailPage />} />
           <Route path="/about" element={<StrategyAssistantPage />} />
-          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/contact" element={<RAGQueryPage/>} />
           <Route path="*" element={<NotFoundPage />} />
           <Route path="/generate-email" element={<PromptFlowPage />} />
           

@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import axios from 'axios';
 import html2pdf from 'html2pdf.js';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, frame } from 'framer-motion';
 
 // Styled components with new aesthetic
 const PageWrapper = styled.main`
@@ -253,7 +253,26 @@ const StrategyAssistantPage = () => {
       setLoading(false);
     }
   };
-
+  const handleExploreCaseStudies = async () => {
+    try {
+      const res = await axios.post('http://localhost:8000/api/case-studies',{industry:"technology",challenge:"adoption"});
+      alert("📚 Case Studies:\n\n" + res.data.case_studies);
+    } catch (err) {
+      console.error("Failed to fetch case studies:", err);
+      alert("❌ Failed to fetch case studies.");
+    }
+  };
+  
+  const handleExploreWhatIf = async () => {
+    try {
+      const res = await axios.post('http://localhost:8000/api/what-if-analysis',{current_framework:"adkar",alternative_framework:"Levins",scenario:"grok"});
+      alert("💡 What-If Analysis:\n\n" + res.data.analysis);
+    } catch (err) {
+      console.error("Failed to fetch what-if analysis:", err);
+      alert("❌ Failed to fetch what-if analysis.");
+    }
+  };
+  
   const submitImmediateFeedback = async () => {
     if (!feedback.trim()) {
       setStatusMsg('Please enter feedback before submitting.');
@@ -550,8 +569,63 @@ const StrategyAssistantPage = () => {
           </div>
         </Container>
       </section>
+      <section style={{ padding: '4rem 0' }}>
+  <Container>
+    <div className="text-center">
+      <Heading 
+        size="lg" 
+        mb="1.5rem"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8 }}
+      >
+        📚 Explore More Resources
+      </Heading>
+      <Text 
+        size="lg" 
+        secondary 
+        maxWidth="600px" 
+        mb="2rem"
+        style={{ margin: '0 auto' }}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, delay: 0.2 }}
+      >
+        Dive into real-world case studies or evaluate alternate strategies with our What-If engine.
+      </Text>
+
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+        <Button
+          variant="primary"
+          size="large"
+          rounded
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handleExploreCaseStudies}
+        >
+          Get Case Studies
+        </Button>
+
+        <Button
+          variant="secondary"
+          size="large"
+          rounded
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handleExploreWhatIf}
+        >
+          What-If Analysis
+        </Button>
+      </div>
+    </div>
+  </Container>
+</section>
+
     </PageWrapper>
   );
 };
+
 
 export default StrategyAssistantPage;
