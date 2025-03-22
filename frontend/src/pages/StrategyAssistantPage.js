@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState} from 'react';
 import ReactMarkdown from 'react-markdown';
 import styled from 'styled-components';
 import axios from 'axios';
+import html2pdf from 'html2pdf.js';
+
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Styled components with new aesthetic
@@ -44,6 +46,20 @@ const Container = styled.div`
   margin: 0 auto;
   padding: 0 2rem;
 `;
+const handleDownloadPDF = () => {
+  const element = document.getElementById('strategy-guide');
+
+  const opt = {
+    margin:       0.5,
+    filename:     'strategy_guide.pdf',
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2 },
+    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+  };
+
+  html2pdf().set(opt).from(element).save();
+};
+
 
 const Heading = styled(motion.h1)`
   font-size: ${props => props.size === 'xl' ? '3rem' : '2.25rem'};
@@ -202,6 +218,8 @@ const StrategyAssistantPage = () => {
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const [trainingSubmitted, setTrainingSubmitted] = useState(false);
   const [immediateSubmitted, setImmediateSubmitted] = useState(false);
+  const [audience, setAudience] = useState('');
+
 
 
   const handleGenerate = async () => {
@@ -219,8 +237,10 @@ const StrategyAssistantPage = () => {
     try {
       const res = await axios.post('http://localhost:8000/strategies', {
         technology,
-        framework
+        framework,
+        audience, 
       });
+      
 
       setOriginalPrompt(res.data.original_prompt);
       setGuide(res.data.guide);
@@ -362,6 +382,12 @@ const StrategyAssistantPage = () => {
               value={framework}
               onChange={(e) => setFramework(e.target.value)}
             />
+            <Input
+            placeholder="Audience (e.g. software developers, marketing team)"
+            value={audience}
+            onChange={(e) => setAudience(e.target.value)}
+            />
+
 
             <div className="text-center">
               <Button 
@@ -392,6 +418,7 @@ const StrategyAssistantPage = () => {
           <AnimatePresence>
           {guide && (
   <Section
+    id="strategy-guide"
     initial="hidden"
     animate="visible"
     variants={fadeInUp}
@@ -399,11 +426,25 @@ const StrategyAssistantPage = () => {
   >
     <Heading size="lg" mb="1.5rem">📘 Initial Strategy Guide</Heading>
     <ReactMarkdown>{guide}</ReactMarkdown>
-    {/* Alternative if using markdown: */}
-    {/* <ReactMarkdown>{guide}</ReactMarkdown> */}
   </Section>
+  
 )}
           </AnimatePresence>
+          {(guide || improved) && (
+  <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+    <Button
+      variant="secondary"
+      size="large"
+      rounded
+      onClick={() => handleDownloadPDF()}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      Download as PDF
+    </Button>
+  </div>
+)}
+
 
           <AnimatePresence>
             {guide && (
@@ -458,7 +499,7 @@ const StrategyAssistantPage = () => {
                 exit="hidden"
               >
                 <Heading size="lg" mb="1.5rem">💡 Improved Guide</Heading>
-                <Text>{improved.guide}</Text>
+                <ReactMarkdown>{improved.guide}</ReactMarkdown>
               </Section>
             )}
           </AnimatePresence>

@@ -9,7 +9,9 @@ class FeedbackRequest(BaseModel):
 class StrategyRequest(BaseModel):
     technology: str
     framework: str
-    feedback: str = None  # Optional
+    audience: Optional[str] = "employees"
+    feedback: Optional[str] = None
+
 
 class EmailRequest(BaseModel):
     subject: str

@@ -10,6 +10,7 @@
     "axios": "^1.8.4",
     "framer-motion": "^12.5.0",
     "gsap": "^3.12.7",
+    "html2pdf.js": "^0.10.3",
     "locomotive-scroll": "^4.1.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

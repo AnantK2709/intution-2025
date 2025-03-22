@@ -30,6 +30,7 @@ def get_strategy(request: StrategyRequest):
         result = run_strategy_workflow(
             technology=request.technology,
             framework=request.framework,
+            audience=request.audience,
             feedback=request.feedback
         )
         return result
