@@ -1,18 +1,31 @@
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
+=======
+import React, { useState, useEffect, useRef } from 'react';
+>>>>>>> origin/Anant
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import styled from 'styled-components';
 import { ThemeProvider } from './context/ThemeContext';
 import GlobalStyles from './styles/GlobalStyles';
 import { useSmoothScroll } from './hooks/useAnimations';
+<<<<<<< HEAD
 import PromptFlowPage from './pages/PromptFlowPage';
 import StrategyAssistantPage from './pages/StrategyAssistantPage';
+=======
+
+>>>>>>> origin/Anant
 // Components
 import Header from './components/Header';
 import Footer from './components/Footer';
 
 // Pages
 import HomePage from './pages/HomePage';
+<<<<<<< HEAD
+=======
+import WorkPage from './pages/WorkPage';
+import AboutPage from './pages/AboutPage';
+>>>>>>> origin/Anant
 import ContactPage from './pages/ContactPage';
 import WorkDetailPage from './pages/WorkDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -87,6 +100,7 @@ const AnimatedRoutes = () => {
       >
         <Routes location={location}>
           <Route path="/" element={<HomePage />} />
+<<<<<<< HEAD
           <Route path="/work" element={<PromptFlowPage />} />
           <Route path="/work/:slug" element={<WorkDetailPage />} />
           <Route path="/about" element={<StrategyAssistantPage />} />
@@ -94,6 +108,13 @@ const AnimatedRoutes = () => {
           <Route path="*" element={<NotFoundPage />} />
           <Route path="/generate-email" element={<PromptFlowPage />} />
 
+=======
+          <Route path="/work" element={<WorkPage />} />
+          <Route path="/work/:slug" element={<WorkDetailPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+>>>>>>> origin/Anant
         </Routes>
       </motion.div>
     </AnimatePresence>
