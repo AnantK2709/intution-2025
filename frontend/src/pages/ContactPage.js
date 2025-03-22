@@ -280,7 +280,7 @@ const ContactPage = () => {
                 <div className="icon">📧</div>
                 <div className="content">
                   <h4>Email Us</h4>
-                  <a href="mailto:info@adriennwhite.com">info@adriennwhite.com</a>
+                  <a href="mailto:info@adriennwhite.com">info@commitandconquer.com</a>
                 </div>
               </div>
               

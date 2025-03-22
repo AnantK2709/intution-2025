@@ -271,8 +271,8 @@ const Header = () => {
   
   const navItems = [
     { path: '/', label: 'Home' },
-    { path: '/work', label: 'Work' },
-    { path: '/about', label: 'About' },
+    { path: '/work', label: 'Form & Fun' },
+    { path: '/about', label: 'Strategy Assistant' },
     { path: '/contact', label: 'Contact' }
   ];
   
@@ -300,7 +300,7 @@ const Header = () => {
           <Flex justify="space-between">
             <Logo>
               <Link to="/">
-                ADRIENN <span>WHITE</span>
+                COMMIT <span>&</span><span> CONQUER</span>
               </Link>
             </Logo>
             

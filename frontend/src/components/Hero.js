@@ -361,7 +361,7 @@ const Hero = () => {
                             initial="hidden"
                             animate="visible"
                         >
-                            Design for <span className="highlight">tomorrow</span>'s digital experience
+                            Empower, <span className="highlight">Adapt</span>Innovate with AI
                         </HeroTitle>
 
                         <HeroSubtitle
@@ -369,8 +369,7 @@ const Hero = () => {
                             initial="hidden"
                             animate="visible"
                         >
-                            Creating visually stunning, high-performance websites with seamless animations
-                            and intuitive interactions that captivate your audience.
+                            <b>Driving seamless AI-powered change adoption across MSD for a future-ready workforce.</b>
                         </HeroSubtitle>
 
                         <HeroButtons
@@ -387,7 +386,7 @@ const Hero = () => {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.98 }}
                             >
-                                Explore Work
+                                Explore Form & Fun
                             </Button>
 
                             <Button
@@ -399,7 +398,7 @@ const Hero = () => {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.98 }}
                             >
-                                Get in Touch
+                                Strategy Assistant
                             </Button>
                         </HeroButtons>
                     </HeroContent>

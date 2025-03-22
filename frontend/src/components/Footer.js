@@ -214,7 +214,7 @@ const Footer = () => {
           >
             <FooterLogo>
               <Link to="/">
-                ADRIENN <GradientText>WHITE</GradientText>
+                COMMIT And <GradientText>CONQUER</GradientText>
               </Link>
             </FooterLogo>
             <FooterDescription>
@@ -308,7 +308,7 @@ const Footer = () => {
             </NewsletterForm>
             <p style={{ color: 'var(--text-secondary)' }}>
               <AnimatedLink href="mailto:info@adriennwhite.com">
-                info@adriennwhite.com
+                info@commitandconquer.com
               </AnimatedLink>
             </p>
           </FooterColumn>
