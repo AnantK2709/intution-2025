@@ -256,66 +256,34 @@ const HomePage = () => {
   const services = [
     {
       id: 1,
-      title: 'Web Design',
-      description: 'We create visually stunning, modern websites with seamless animations and interactions.',
-      icon: '🎨',
+      title: 'SwiftSend',
+      description: 'A fast and efficient tool designed to streamline communication, transactions, or content delivery.',
+      icon: '🚀',
       link: '/services/web-design'
     },
     {
       id: 2,
-      title: 'UI/UX Design',
-      description: 'Intuitive interfaces and exceptional user experiences that delight and engage.',
-      icon: '✨',
+      title: 'Strategy Assistant',
+      description: 'Your AI-powered companion for navigating change management. Provides structured, step-by-step strategies, collects feedback, and continuously refines recommendations to drive effective transformation.',
+      icon: '💻',
       link: '/services/ui-ux-design'
     },
     {
       id: 3,
-      title: 'Development',
-      description: 'High-performance, optimized code that brings your digital visions to life.',
-      icon: '💻',
+      title: 'Framework Lens',
+      description: 'A deep-dive tool for analyzing and comparing change management frameworks. Explore different strategic approaches, simulate outcomes with "what-if" analysis, and generate case studies for practical insights',
+      icon: '🔍',
       link: '/services/development'
     },
     {
       id: 4,
-      title: 'Branding',
-      description: 'Distinctive brand identities that capture the essence of your business.',
-      icon: '🚀',
+      title: 'ChangeQuest',
+      description: 'Build custom quizzes and games to educate users on the changes you\'re bringing.',
+      icon: '🎮',
       link: '/services/branding'
     }
   ];
-  
-  // Sample testimonials data
-  const testimonials = [
-    {
-      id: 1,
-      quote: "Adrienn's team created a website for us that perfectly captures our brand while providing an exceptional user experience. The animations and transitions are simply stunning.",
-      author: 'Sarah Johnson',
-      role: 'CEO, Lumina Brands',
-      avatar: '/images/testimonial-1.jpg'
-    },
-    {
-      id: 2,
-      quote: "The attention to detail and focus on performance really sets Adrienn White apart. Our new website loads lightning fast and looks amazing on all devices.",
-      author: 'Michael Chen',
-      role: 'Marketing Director, TechVision',
-      avatar: '/images/testimonial-2.jpg'
-    },
-    {
-      id: 3,
-      quote: "Working with Adrienn was a game-changer for our business. The website they designed has dramatically increased our conversion rate and user engagement.",
-      author: 'Emma Rodriguez',
-      role: 'Founder, Artisan Collective',
-      avatar: '/images/testimonial-3.jpg'
-    }
-  ];
-  
-  // Stats data
-  const stats = [
-    { value: 150, label: 'Projects Completed' },
-    { value: 98, label: 'Satisfied Clients' },
-    { value: 10, label: 'Years Experience' },
-    { value: 12, label: 'Design Awards' }
-  ];
+
   
   return (
     <main>
@@ -347,8 +315,6 @@ const HomePage = () => {
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-              We deliver exceptional digital experiences through creative design
-              and technical excellence.
             </Text>
           </div>
           
@@ -394,122 +360,6 @@ const HomePage = () => {
           </Grid>
         </Container>
       </ServicesSection>
-      
-      <Work />
-      
-      <TestimonialsSection>
-        <Container>
-          <div className="text-center mb-16">
-            <Heading 
-              size="lg" 
-              mb="1.5rem"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.8 }}
-            >
-              What Our Clients Say
-            </Heading>
-            <Text 
-              size="lg" 
-              secondary 
-              maxWidth="600px" 
-              style={{ margin: '0 auto' }}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              Don't just take our word for it. Here's what our clients have to say.
-            </Text>
-          </div>
-          
-          <Grid cols={3} mdCols={2} smCols={1} gap="2rem">
-            {testimonials.map((testimonial, index) => (
-              <TestimonialCard
-                key={testimonial.id}
-                variants={fadeInUp}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ delay: index * 0.2 }}
-              >
-                <div className="quote" ref={quoteRef}>
-                  {testimonial.quote}
-                </div>
-                <div className="author">
-                  <div className="avatar">
-                    <img 
-                      src={testimonial.avatar} 
-                      alt={testimonial.author}
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = `https://via.placeholder.com/50x50/6e00ff/ffffff?text=${testimonial.author.charAt(0)}`;
-                      }}
-                    />
-                  </div>
-                  <div className="info">
-                    <h4>{testimonial.author}</h4>
-                    <p>{testimonial.role}</p>
-                  </div>
-                </div>
-              </TestimonialCard>
-            ))}
-          </Grid>
-        </Container>
-      </TestimonialsSection>
-      
-      <StatsSection className="stats-section">
-        <Container>
-          <Grid cols={4} mdCols={2} smCols={2} gap="2rem">
-            {stats.map((stat, index) => (
-              <StatItem
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ delay: index * 0.2 }}
-              >
-                <div className="number stat-counter" data-value={stat.value}>0</div>
-                <div className="label">{stat.label}</div>
-              </StatItem>
-            ))}
-          </Grid>
-        </Container>
-      </StatsSection>
-      
-      <CTASection>
-        <Container>
-          <motion.div
-            className="cta-panel"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.8 }}
-          >
-            <h2>Ready to transform your digital presence?</h2>
-            <p>
-              Let's create something amazing together. Reach out to discuss
-              your project and see how we can bring your vision to life.
-            </p>
-            <Button
-              as="a"
-              href="/contact"
-              variant="primary"
-              size="large"
-              rounded
-              style={{ 
-                background: 'white',
-                color: '#6e00ff'
-              }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              Get in Touch
-            </Button>
-          </motion.div>
-        </Container>
-      </CTASection>
     </main>
   );
 };

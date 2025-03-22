@@ -133,7 +133,8 @@ const Button = styled(motion.button)`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  
+  margin-right: 1rem;
+  margin-left: 1rem;
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(110, 0, 255, 0.15);
@@ -172,7 +173,7 @@ const EditableDraft = styled.textarea`
   min-height: 200px;
   padding: 1.5rem;
   border-radius: 8px;
-  background: ${({ theme }) => theme?.colors?.surfaceAlt || '#1f2937'};
+  background: ${({ theme }) => theme?.colors?.surfaceAlt || 'lightgrey'};
   color: ${({ theme }) => theme?.colors?.text || '#f9fafb'};
   border: 1px solid ${({ theme }) => theme?.colors?.border || '#374151'};
   resize: vertical;
@@ -558,7 +559,7 @@ const determineAdkarStage = () => {
           animate="visible"
         >
           <FormGroup variants={fadeInUp}>
-            <FormLabel htmlFor="change_type">Change Type*</FormLabel>
+            <FormLabel htmlFor="change_type">Change Type</FormLabel>
             <FormSelect
               id="change_type"
               name="change_type"
@@ -574,7 +575,7 @@ const determineAdkarStage = () => {
           </FormGroup>
 
           <FormGroup variants={fadeInUp}>
-            <FormLabel htmlFor="audience">Audience*</FormLabel>
+            <FormLabel htmlFor="audience">Audience</FormLabel>
             <FormSelect
               id="audience"
               name="audience"
@@ -624,7 +625,7 @@ const determineAdkarStage = () => {
           </div>
 
           <FormGroup variants={fadeInUp}>
-            <FormLabel htmlFor="purpose">Purpose*</FormLabel>
+            <FormLabel htmlFor="purpose">Purpose</FormLabel>
             <FormInput
               id="purpose"
               name="purpose"
@@ -635,7 +636,7 @@ const determineAdkarStage = () => {
           </FormGroup>
 
           <FormGroup variants={fadeInUp}>
-            <FormLabel htmlFor="key_points">Key Points / Message*</FormLabel>
+            <FormLabel htmlFor="key_points">Key Points / Message</FormLabel>
             <FormTextArea
               id="key_points"
               name="key_points"
@@ -807,6 +808,7 @@ const determineAdkarStage = () => {
                       </>
                     }
                   </Button>
+        
                   <Button
                     variant="outline"
                     onClick={() => navigate('/faq', { state: { formData: form } })}

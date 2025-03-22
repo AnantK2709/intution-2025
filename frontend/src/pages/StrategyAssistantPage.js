@@ -167,10 +167,11 @@ const Section = styled(motion.div)`
     : ({ theme }) => theme?.colors?.surface || '#1f2937'};
   color: ${props => props.light 
     ? ({ theme }) => theme?.colors?.text || '#333' 
-    : ({ theme }) => theme?.colors?.textLight || '#f9fafb'};
+    : ({ theme }) => theme?.colors?.textLight || 'black'};
   border-radius: 16px;
   margin-top: 2rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  font-color: black;
 `;
 
 const StatusMessage = styled(motion.div)`

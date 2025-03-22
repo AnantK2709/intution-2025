@@ -361,7 +361,7 @@ const Hero = () => {
                             initial="hidden"
                             animate="visible"
                         >
-                            Empower, <span className="highlight">Adapt</span>Innovate with AI
+                            Empower <span className="highlight">Adapt</span> Innovate with AI
                         </HeroTitle>
 
                         <HeroSubtitle
@@ -386,7 +386,7 @@ const Hero = () => {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.98 }}
                             >
-                                Explore Form & Fun
+                                Explore SwiftSend
                             </Button>
 
                             <Button

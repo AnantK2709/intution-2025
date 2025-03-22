@@ -271,9 +271,9 @@ const Header = () => {
   
   const navItems = [
     { path: '/', label: 'Home' },
-    { path: '/work', label: 'Form & Fun' },
+    { path: '/work', label: 'SwiftSend' },
     { path: '/about', label: 'Strategy Assistant' },
-    { path: '/contact', label: 'Contact' }
+    { path: '/contact', label: 'FrameworkLens' }
   ];
   
   const isActive = (path) => {
