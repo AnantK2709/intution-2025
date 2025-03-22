@@ -200,6 +200,9 @@ const StrategyAssistantPage = () => {
   const [statusType, setStatusType] = useState('error');
   const [loading, setLoading] = useState(false);
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  const [trainingSubmitted, setTrainingSubmitted] = useState(false);
+  const [immediateSubmitted, setImmediateSubmitted] = useState(false);
+
 
   const handleGenerate = async () => {
     if (!technology || !framework) {
@@ -231,40 +234,85 @@ const StrategyAssistantPage = () => {
     }
   };
 
-  const handleSubmitFeedback = async () => {
+  const submitImmediateFeedback = async () => {
     if (!feedback.trim()) {
       setStatusMsg('Please enter feedback before submitting.');
       setStatusType('error');
       return;
     }
-
+  
     setSubmittingFeedback(true);
-    
     try {
-      const res = await axios.post('http://localhost:8000/feedback_strategies', {
+      const res = await axios.post('http://localhost:8000/feedback_immediate', {
         original_prompt: originalPrompt,
         feedback: feedback
       });
-
+  
+      setImmediateSubmitted(true);
       if (res.data.improved_guide) {
         setImproved({
           prompt: res.data.improved_prompt,
           guide: res.data.improved_guide
         });
-        setStatusMsg("✅ Feedback submitted! Here's an improved version.");
-        setStatusType('success');
-      } else {
-        setStatusMsg("✅ Feedback submitted! We'll use it to improve future guides.");
+        setStatusMsg("✅ Improved guide generated based on your feedback.");
         setStatusType('success');
       }
+  
+          
+      
+          // 👇 Reset feedback field
+          setFeedback('');
     } catch (err) {
       console.error(err);
-      setStatusMsg(`❌ Failed to submit feedback: ${err.response?.data?.message || 'Server error'}`);
+      setStatusMsg("❌ Failed to submit immediate feedback.");
       setStatusType('error');
     } finally {
       setSubmittingFeedback(false);
     }
   };
+  
+  const submitTrainingFeedback = async () => {
+    if (!feedback.trim()) {
+      setStatusMsg('Please enter feedback before submitting.');
+      setStatusType('error');
+      return;
+    }
+  
+    setSubmittingFeedback(true);
+    try {
+      const res = await axios.post('http://localhost:8000/feedback_training', {
+        original_prompt: originalPrompt,
+        feedback: feedback
+      });
+  
+      setTrainingSubmitted(true);
+      if (res.data.improved_guide) {
+        setImproved({
+          prompt: res.data.improved_prompt,
+          guide: res.data.improved_guide
+        });
+        setStatusMsg("✅ Training batch processed! Here's the new version.");
+        setStatusType('success');
+        
+      } else {
+        setStatusMsg("✅ Feedback saved for training. We'll process it after 5 entries.");
+        setStatusType('success');
+      }
+           
+          
+      
+          // 👇 Reset feedback field
+          setFeedback('');
+      
+    } catch (err) {
+      console.error(err);
+      setStatusMsg("❌ Failed to submit training feedback.");
+      setStatusType('error');
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  };
+  
 
   return (
     <PageWrapper>
@@ -373,15 +421,29 @@ const StrategyAssistantPage = () => {
                   onChange={(e) => setFeedback(e.target.value)}
                 />
                 <div className="text-center">
-                  <Button 
-                    onClick={handleSubmitFeedback} 
-                    disabled={submittingFeedback}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.98 }}
-                    rounded
-                  >
-                    {submittingFeedback ? "Submitting..." : "Submit Feedback"}
-                  </Button>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+  <Button 
+    onClick={submitImmediateFeedback}
+    disabled={submittingFeedback}
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.98 }}
+    rounded
+  >
+    {submittingFeedback && !trainingSubmitted ? "Submitting..." : "Improve Now"}
+  </Button>
+
+  <Button 
+    onClick={submitTrainingFeedback}
+    variant="secondary"
+    disabled={submittingFeedback}
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.98 }}
+    rounded
+  >
+    {submittingFeedback && !immediateSubmitted ? "Submitting..." : "Save for Training"}
+  </Button>
+</div>
+
                 </div>
               </motion.div>
             )}
