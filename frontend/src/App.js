@@ -8,6 +8,7 @@ import { useSmoothScroll } from './hooks/useAnimations';
 import PromptFlowPage from './pages/PromptFlowPage';
 import StrategyAssistantPage from './pages/StrategyAssistantPage';
 import RAGQueryPage from './pages/RAGQueryPage';
+import DraftReviewPage from './pages/DraftReviewPage';
 
 // Game Pages
 import GamificationPage from './pages/GamificationPage';
@@ -103,6 +104,7 @@ const AnimatedRoutes = () => {
           <Route path="*" element={<NotFoundPage />} />
           <Route path="/generate-email" element={<PromptFlowPage />} />
           <Route path="/faq" element={<FAQPage />} />
+          <Route path="/review" element={<DraftReviewPage />} />
           {/* Gamification Routes */}
           <Route path="/games" element={<GamificationPage />} />
           <Route path="/play/mcq/:gameId" element={<MCQGamePage />} />

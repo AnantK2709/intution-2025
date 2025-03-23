@@ -273,6 +273,7 @@ const Header = () => {
     { path: '/', label: 'Home' },
     { path: '/work', label: 'SwiftSend' },
     { path: '/about', label: 'Strategy Assistant' },
+    { path: '/review', label: 'Draft Review' },
     { path: '/contact', label: 'FrameworkLens' }
   ];
   
