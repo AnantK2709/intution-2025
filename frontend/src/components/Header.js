@@ -300,7 +300,7 @@ const Header = () => {
           <Flex justify="space-between">
             <Logo>
               <Link to="/">
-                ADADPTIFY <span>.</span><span>AI</span>
+                ADADPTIFY<span>.</span><span>AI</span>
               </Link>
             </Logo>
             
